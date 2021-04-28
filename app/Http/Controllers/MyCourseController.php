@@ -67,8 +67,47 @@ class MyCourseController extends Controller
             return response()->json([
                 'status' => 'error', 
                 'message' => 'you already have the course'
-            ], 400);
+            ], 409);
         }
+
+        // cek jika course premium maka masuk orders 
+        if($course->type === 'premium') {
+            if($course->price === 0) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'price can\'t be 0'
+                ]);
+            }
+
+            // insert data ke API create order
+            $order = postOrder([
+                'user' => $user['data'],
+                'course' => $course->toArray()
+            ]);
+
+            if($order['status'] === 'error') {
+                return response()->json([
+                    'status' => $order['status'],
+                    'message' => $order['message']
+                ], $order['http_code']);
+            }
+
+            return response()->json([
+                'status' => $order['status'],
+                'data' => $order['data']
+            ]);
+        } else {
+            $myCourse = MyCourse::create($data);
+    
+            return response()->json([
+                'status' => 'success',
+                'data' => $myCourse
+            ]);
+        }
+    }
+
+    public function createPremiumAccess(Request $request) {
+        $data = $request->all();
 
         $myCourse = MyCourse::create($data);
 
@@ -76,6 +115,5 @@ class MyCourseController extends Controller
             'status' => 'success',
             'data' => $myCourse
         ]);
-
     }
 }

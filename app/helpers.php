@@ -41,5 +41,19 @@ function getUserByIds($userIds = []) {
     }
 }
 
+function postOrder($params) {
+    try {
+        $response = Http::post('http://localhost:8001/api/orders', $params);
+        $data = $response->json();
+        return $data;
+    } catch(\Throwable $th) {
+        return [
+            'status' => 'error',
+            'http_code' => 500,
+            'message' => 'service order payment unavailable'
+        ];
+    }
+}
+
 
 ?>
