@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use File;
 use App\Course;
 use App\Mentor;
 use App\Review;
@@ -90,12 +91,12 @@ class CourseController extends Controller
         $rules = [
             'name' => 'string|required',
             'certificate' => 'boolean|required',
-            'thumbnail' => 'string|url',
+            'thumbnail' => 'image|required',
             'type' => 'required|in:free,premium',
             'status' => 'required|in:draft,published',
             'price' => 'integer',
             'level' => 'required|in:all-level,beginner,intermediate,advance',
-            'description' => 'text',
+            'description' => 'string',
             'mentor_id' => 'required|integer'
         ];
 
@@ -119,6 +120,10 @@ class CourseController extends Controller
                 'status' => 'error',
                 'message' => 'mentor not found'
             ], 404);
+        }
+
+        if($request->file('thumbnail')) {
+            $data['thumbnail'] = $request->file('thumbnail')->store('assets/images', 'public');
         }
 
         $course = Course::create($data);
@@ -193,6 +198,14 @@ class CourseController extends Controller
                 'message' => 'course not found'
             ], 404);
         }
+
+        $image = $course->thumbnail;
+
+        $array = explode('/', ltrim($image, '/'));
+
+        $path = 'storage/assets/images/';
+
+        File::delete($path.end($array));
 
         $course->delete();
 

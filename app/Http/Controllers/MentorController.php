@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use File;
 use App\Mentor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -21,7 +22,7 @@ class MentorController extends Controller
        // buat validasi request
        $rules = [
             'name' => 'string|required',
-            'profile' => 'string|required',
+            'profile' => 'image|required',
             'email' =>  'email|required',
             'profession' => 'required|string'
        ];
@@ -39,6 +40,10 @@ class MentorController extends Controller
            ], 400);
        }
 
+       if($request->file('profile')) {
+            $data['profile'] = $request->file('profile')->store('assets/mentor', 'public');
+       }
+
        $mentor = Mentor::create($data);
 
        return response()->json([
@@ -50,10 +55,10 @@ class MentorController extends Controller
     public function update(Request $request, $id) {
         // buat validator
         $rules = [
-            'name' => 'string|required',
-            'email' => 'email|required',
-            'profession' => 'string|required',
-            'profile' => 'string|required'
+            'name' => 'string',
+            'email' => 'email',
+            'profession' => 'string',
+            'profile' => 'image'
         ];
 
         // get all data request
@@ -69,14 +74,19 @@ class MentorController extends Controller
             ], 400);
         }
 
+        
         // cek mentor ada atau tidak
         $mentor = Mentor::find($id);
-
+        
         if(!$mentor) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'mentor not found'
             ], 404);
+        }
+        
+        if($request->file('profile')) {
+            $data['profile'] = $request->file('profile')->store('assets/mentor', 'public');
         }
 
         $mentor->update($data);
@@ -113,6 +123,14 @@ class MentorController extends Controller
                 'message' => 'mentor not found'
             ], 400);
         }
+
+        $profile = $mentor->profile;
+
+        $array = explode('/', ltrim($profile, '/'));
+
+        $path = 'storage/assets/mentor/';
+
+        File::delete($path.end($array));
 
         $mentor->delete();
 

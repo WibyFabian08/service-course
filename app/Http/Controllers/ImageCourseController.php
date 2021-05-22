@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use File;
 use App\Course;
 use App\ImageCourse;
 use Illuminate\Http\Request;
@@ -11,7 +12,7 @@ class ImageCourseController extends Controller
 {
     public function create(Request $request) {
         $rules = [
-            'image' => 'url|required',
+            'image' => 'image|required',
             'course_id' => 'integer|required'
         ];
 
@@ -35,7 +36,12 @@ class ImageCourseController extends Controller
             ], 404);
         }
 
+        if($request->file('image')) {
+            $data['image'] = $request->file('image')->store('assets/image-course', 'public');
+        }
+
         $image = ImageCourse::create($data);
+        
 
         return response()->json([
             'status' => 'success',
@@ -52,6 +58,13 @@ class ImageCourseController extends Controller
                 'message' => 'image not found'
             ], 404);
         }
+        $image_course = $image->image;
+
+        $array = explode('/', ltrim($image_course, '/'));
+
+        $path = 'storage/assets/image-course/';
+
+        File::delete($path.end($array));
 
         $image->delete();
 
